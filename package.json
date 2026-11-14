@@ -1,0 +1,76 @@
+{
+	"name": "neoorm-better-auth-adapter",
+	"version": "0.1.0",
+	"description": "Better Auth database adapter for NeoORM",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/xmreur/neoorm-better-auth-adapter.git"
+	},
+	"bugs": {
+		"url": "https://github.com/xmreur/neoorm-better-auth-adapter/issues"
+	},
+	"homepage": "https://github.com/xmreur/neoorm-better-auth-adapter#readme",
+	"packageManager": "bun@1.4.4",
+	"type": "module",
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		}
+	},
+	"typesVersions": {
+		"*": {
+			"*": [
+				"dist/index.d.ts"
+			]
+		}
+	},
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE"
+	],
+	"sideEffects": false,
+	"keywords": [
+		"better-auth",
+		"better-auth-adapter",
+		"neoorm",
+		"orm",
+		"authentication",
+		"typescript",
+		"postgres",
+		"postgresql",
+		"sqlite",
+		"mysql",
+		"mariadb"
+	],
+	"engines": {
+		"node": ">=22.5.0"
+	},
+	"scripts": {
+		"build": "tsc -p tsconfig.build.json",
+		"typecheck": "tsc -p tsconfig.json --noEmit",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"lint": "biome check .",
+		"format": "biome format --write .",
+		"prepublishOnly": "bun run build && bun run test"
+	},
+	"peerDependencies": {
+		"@better-auth/core": "^1.7.23",
+		"neoorm": "^0.9.9"
+	},
+	"devDependencies": {
+		"@better-auth/core": "1.7.23",
+		"@better-auth/test-utils": "1.7.23",
+		"@biomejs/biome": "^2.5.2",
+		"@types/node": "^26.1.0",
+		"better-auth": "1.7.23",
+		"neoorm": "^0.9.9",
+		"typescript": "^7.0.2",
+		"vitest": "^5.1.0"
+	}
+}
