@@ -1,11 +1,13 @@
+import { readFile } from "node:fs/promises";
 import type { BetterAuthOptions } from "@better-auth/core";
 import type { BetterAuthDBSchema } from "@better-auth/core/db";
 import {
 	type AdapterFactoryCustomizeAdapterCreator,
-	type DBAdapter,
 	createAdapterFactory,
+	type DBAdapter,
 } from "@better-auth/core/db/adapter";
-import { generateNeoOrmSchema } from "./create-schema.js";
+import { buildNeoOrmSchema, renderNeoOrmSchema } from "./create-schema.js";
+import { mergeAuthSchema, resolveSchemaOutputPath } from "./schema-file.js";
 import type {
 	NeoOrmAdapterOptions,
 	NeoOrmClientLike,
@@ -14,6 +16,15 @@ import type {
 	NeoOrmTableAccessor,
 } from "./types.js";
 import { convertWhere } from "./where.js";
+
+function isMissingFile(error: unknown): boolean {
+	return (
+		typeof error === "object" &&
+		error !== null &&
+		"code" in error &&
+		error.code === "ENOENT"
+	);
+}
 
 const ADAPTER_ID = "neoorm";
 
@@ -141,7 +152,11 @@ const createCustomAdapter = (
 				});
 				const updated = rows[0];
 				if (!updated) return null;
-				return (await refetch(repository, updated, updated)) as typeof update;
+				return (await refetch(
+					repository,
+					updated,
+					updated,
+				)) as typeof update;
 			},
 
 			async updateMany({ model, where, update }) {
@@ -178,14 +193,22 @@ const createCustomAdapter = (
 			},
 
 			async createSchema({ file, tables }) {
-				const code = generateNeoOrmSchema(tables as BetterAuthDBSchema, {
+				const parts = buildNeoOrmSchema(tables as BetterAuthDBSchema, {
 					modelName: (model) => resolveAccessor(getModelName(model)),
 					fieldName: (model, field) => getFieldName({ model, field }),
 				});
-				return {
-					code,
-					path: adapterOptions.schemaPath ?? file ?? "./db/schema.ts",
-				};
+				const path = await resolveSchemaOutputPath({
+					schemaPath: adapterOptions.schemaPath,
+					cliFile: file,
+				});
+				let code = renderNeoOrmSchema(parts);
+				try {
+					const existing = await readFile(path, "utf8");
+					code = mergeAuthSchema(existing, parts);
+				} catch (error) {
+					if (!isMissingFile(error)) throw error;
+				}
+				return { code, path };
 			},
 		};
 	};
@@ -242,9 +265,10 @@ export function neoormAdapter(
 					? (callback) =>
 							client().$transaction((tx) =>
 								callback(
-									createFactory(() => tx as NeoOrmClientLike, false)(
-										lazyOptions as BetterAuthOptions,
-									),
+									createFactory(
+										() => tx as NeoOrmClientLike,
+										false,
+									)(lazyOptions as BetterAuthOptions),
 								),
 							)
 					: false,
@@ -256,7 +280,10 @@ export function neoormAdapter(
 			adapter: createCustomAdapter(client, adapterOptions),
 		});
 
-	const factory = createFactory(getClient, adapterOptions.transaction !== false);
+	const factory = createFactory(
+		getClient,
+		adapterOptions.transaction !== false,
+	);
 
 	return (options: BetterAuthOptions) => {
 		lazyOptions = options;

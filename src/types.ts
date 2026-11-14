@@ -45,10 +45,10 @@ export type NeoOrmAdapterOptions = {
 	 */
 	modelName?: ((model: string) => string) | undefined;
 	/**
-	 * Output path used by Better Auth's `generate` command for
-	 * {@link generateNeoOrmSchema}.
+	 * Output path used by Better Auth's `generate` command.
 	 *
-	 * @default "./db/schema.ts"
+	 * When omitted, the path is `schema` from `neoorm.config.ts`. The CLI
+	 * file argument is used only when that config is absent.
 	 */
 	schemaPath?: string | undefined;
 };

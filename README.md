@@ -66,20 +66,18 @@ database: neoormAdapter(db, {
 
 ## Schema
 
-Better Auth can write a NeoORM `schema.ts` from your auth config. Set the adapter up first, then generate:
+Better Auth writes its tables into the schema file from `neoorm.config.ts`. Set the adapter up first, then generate:
 
 ```bash
 npx @better-auth/cli generate
 ```
-
-The file is written to `./db/schema.ts` unless you set `schemaPath`. Point NeoORM at that file and migrate:
 
 ```ts
 // neoorm.config.ts
 import { defineConfig } from "neoorm";
 
 export default defineConfig({
-	schema: "./db/schema.ts",
+	schema: "./schema.ts",
 	out: "./neoorm",
 	datasource: {
 		provider: "postgresql",
@@ -87,6 +85,10 @@ export default defineConfig({
 	},
 });
 ```
+
+`schema` is where the tables are written. Pass `schemaPath` to the adapter when that file should be somewhere else. The path given to the Better Auth CLI is used only when `neoorm.config.ts` is not there.
+
+If `schema.ts` already exists, generation keeps your other tables and the `defineSchema` options. Auth tables are refreshed between `// better-auth:start` and `// better-auth:end`. A missing file is created at the config path.
 
 ```bash
 bunx neoorm migrate dev
@@ -100,6 +102,7 @@ A generated table looks like this:
 import { defineSchema, fk, table, text, timestamp } from "neoorm/schema";
 
 export const schema = defineSchema({
+	// better-auth:start
 	user: table({
 		id: text().primary(),
 		email: text().notNull().unique(),
@@ -116,6 +119,7 @@ export const schema = defineSchema({
 			.index()
 			.onDelete("cascade"),
 	}),
+	// better-auth:end
 });
 ```
 
@@ -139,13 +143,13 @@ Models with `disableMigrations` are skipped. Composite indexes from the Better A
 
 ## Options
 
-| Option | Default | |
-| --- | --- | --- |
-| `usePlural` | `false` | Use plural accessors (`user` → `users`). Must match the schema. |
-| `modelName` | | Map a model name to a client accessor. |
-| `transaction` | `true` | Wrap Better Auth's multi-step operations in `client.$transaction`. |
-| `debugLogs` | | Better Auth adapter debug logs. |
-| `schemaPath` | `"./db/schema.ts"` | Path returned by `npx @better-auth/cli generate`. |
+| Option        | Default                          |                                                                    |
+| ------------- | -------------------------------- | ------------------------------------------------------------------ |
+| `usePlural`   | `false`                          | Use plural accessors (`user` → `users`). Must match the schema.    |
+| `modelName`   |                                  | Map a model name to a client accessor.                             |
+| `transaction` | `true`                           | Wrap Better Auth's multi-step operations in `client.$transaction`. |
+| `debugLogs`   |                                  | Better Auth adapter debug logs.                                    |
+| `schemaPath`  | `schema` from `neoorm.config.ts` | Path written by `npx @better-auth/cli generate`.                   |
 
 ## Behavior
 
