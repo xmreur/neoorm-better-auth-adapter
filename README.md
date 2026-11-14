@@ -183,7 +183,7 @@ git tag v0.1.1
 git push origin v0.1.1
 ```
 
-`.github/workflows/publish.yml` publishes that tag to npm. The workflow uses npm trusted publishing (GitHub Actions OIDC). On the package's npm Access settings, add a trusted publisher for repository `xmreur/neoorm-better-auth-adapter`, workflow `publish.yml`. An `NPM_TOKEN` repository secret also works if it is set; leave it unset when using a trusted publisher.
+`.github/workflows/publish.yml` publishes that tag to npm with trusted publishing. It uses Node 24 so the npm CLI can exchange the GitHub Actions OIDC token, and it does not set `NODE_AUTH_TOKEN`. On the package's npm Access settings, the trusted publisher is repository `xmreur/neoorm-better-auth-adapter` and workflow `publish.yml`, with no environment. A new publisher stays pending until that workflow publishes once.
 
 ## License
 
